@@ -119,9 +119,10 @@ class SearchQuerySet(object):
     
     def _fill_cache(self, start, end):
         # Tell the query where to start from and how many we'd like.
-        self.query._reset()
-        self.query.set_limits(start, end)
-        results = self.query.get_results()
+        query = self.query._clone()
+        query._reset()
+        query.set_limits(start, end)
+        results = query.get_results()
         
         if len(results) == 0:
             return False
@@ -133,13 +134,13 @@ class SearchQuerySet(object):
         # an array of 100,000 ``None``s consumed less than .5 Mb, which ought
         # to be an acceptable loss for consistent and more efficient caching.
         if len(self._result_cache) == 0:
-            self._result_cache = [None for i in xrange(self.query.get_count())]
+            self._result_cache = [None for i in xrange(query.get_count())]
         
         if start is None:
             start = 0
         
         if end is None:
-            end = self.query.get_count()
+            end = query.get_count()
         
         # Check if we wish to load all objects.
         if self._load_all:
